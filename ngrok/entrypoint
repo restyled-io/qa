@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+if [ -z "$NGROK_AUTHTOKEN" ]; then
+  echo "NGROK_AUTHTOKEN not set" >&2
+  exit 1
+fi
+
+ngrok update
+ngrok authtoken "$NGROK_AUTHTOKEN"
+exec "$@"

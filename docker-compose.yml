@@ -1,0 +1,60 @@
+---
+version: "3"
+
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: restyled_qa
+
+  redis:
+    image: redis
+
+  restyled.io:
+    image: restyled/restyled.io:rc
+    environment:
+      - APPROOT=
+      - DATABASE_URL=postgres://postgres:password@postgres/restyled_qa
+      - GITHUB_APP_ID=5355
+      - GITHUB_OAUTH_CLIENT_ID=x
+      - GITHUB_OAUTH_CLIENT_SECRET=x
+      - LOG_LEVEL=DEBUG
+      - REDIS_URL=redis://redis
+      - RESTYLER_TAG=rc
+      - GITHUB_APP_KEY_BASE64=${GITHUB_APP_KEY_BASE64}
+
+  restyled.io-backend:
+    image: restyled/restyled.io:rc
+    command: /app/restyled.io-backend
+    environment:
+      - APPROOT=
+      - DATABASE_URL=postgres://postgres:password@postgres/restyled_qa
+      - GITHUB_APP_ID=5355
+      - GITHUB_OAUTH_CLIENT_ID=x
+      - GITHUB_OAUTH_CLIENT_SECRET=x
+      - LOG_LEVEL=DEBUG
+      - REDIS_URL=redis://redis
+      - RESTYLER_TAG=rc
+      - GITHUB_APP_KEY_BASE64=${GITHUB_APP_KEY_BASE64}
+    volumes:
+      - /tmp:/tmp
+      - /var/run/docker.sock:/var/run/docker.sock
+    user: root  # writes to docker socket
+
+  ngrok:
+    image: fnichol/ngrok
+    entrypoint: /entrypoint
+    command:
+      - ngrok
+      - http
+      - --subdomain=restyled
+      - --log=stdout
+      - restyled.io:3000
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    ports:
+      - 4040:4040
+    volumes:
+      - ./ngrok/entrypoint:/entrypoint:ro
